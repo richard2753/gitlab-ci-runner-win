@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Linq;
 using System.Text;
 using gitlab_ci_runner.conf;
@@ -23,7 +24,7 @@ namespace gitlab_ci_runner.setup
             while (sCoordUrl == "")
             {
                 Console.WriteLine("Please enter the gitlab-ci coordinator URL (e.g. http(s)://gitlab-ci.org:3000/ )");
-                sCoordUrl = Console.ReadLine();
+                sCoordUrl = ConfigurationManager.AppSettings["gitlab-ci-url"]; //Console.ReadLine();
             }
             Config.url = sCoordUrl;
             Console.WriteLine();
@@ -41,15 +42,15 @@ namespace gitlab_ci_runner.setup
         private static void registerRunner()
         {
             // Read Token
-            string sToken = "";
-            while (sToken == "")
-            {
-                Console.WriteLine("Please enter the gitlab-ci token for this runner:");
-                sToken = Console.ReadLine();
-            }
+            //string sToken = "";
+            //while (sToken == "")
+            //{
+            //    Console.WriteLine("Please enter the gitlab-ci token for this runner:");
+            //    sToken = Console.ReadLine();
+            //}
 
             // Register Runner
-            string sTok = Network.registerRunner(SSHKey.getPublicKey(), sToken);
+            string sTok = Network.registerRunner(SSHKey.getPublicKey(), ConfigurationManager.AppSettings["gitlab-ci-token"]);
             if (sTok != null)
             {
                 // Save Config
@@ -63,6 +64,7 @@ namespace gitlab_ci_runner.setup
             {
                 Console.WriteLine();
                 Console.WriteLine("Failed to register this runner. Perhaps your SSH key is invalid or you are having network problems");
+                throw new Exception("Failed to register runner");
             }
         }
     }

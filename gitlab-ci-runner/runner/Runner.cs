@@ -14,15 +14,26 @@ namespace gitlab_ci_runner.runner
         /// Build process
         /// </summary>
         private static Build build = null;
+        private static bool stopRequested = false;
 
         /// <summary>
         /// Start the configured runner
         /// </summary>
         public static void run()
         {
+            stopRequested = false;
             Console.WriteLine("* Gitlab CI Runner started");
             Console.WriteLine("* Waiting for builds");
             waitForBuild();
+        }
+
+        public static void stop()
+        {
+            stopRequested = true;
+            while (running)
+            {
+                Thread.Sleep(1000);
+            }
         }
 
         /// <summary>
@@ -52,7 +63,7 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         private static void waitForBuild()
         {
-            while (true)
+            while (!stopRequested || running)
             {
                 if (completed || running)
                 {
@@ -63,7 +74,7 @@ namespace gitlab_ci_runner.runner
                 else
                 {
                     // Get new build
-                    getBuild();
+                    if(!stopRequested) getBuild();
                 }
                 Thread.Sleep(5000);
             }
