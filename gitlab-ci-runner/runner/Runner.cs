@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using gitlab_ci_runner.api;
 using gitlab_ci_runner.helper;
+using Magnum.Extensions;
+using Timer = System.Timers.Timer;
 
 namespace gitlab_ci_runner.runner
 {
@@ -15,6 +18,7 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         private static Build build = null;
         private static bool stopRequested = false;
+        private static readonly Timer _poller = new Timer(5.Seconds().TotalMilliseconds);
 
         /// <summary>
         /// Start the configured runner
@@ -22,13 +26,28 @@ namespace gitlab_ci_runner.runner
         public static void run()
         {
             stopRequested = false;
+            _poller.Elapsed += (o, e) => PollForBuild();
+            _poller.Start();
             Console.WriteLine("* Gitlab CI Runner started");
             Console.WriteLine("* Waiting for builds");
-            waitForBuild();
+            //waitForBuild();
+        }
+
+        private static void PollForBuild()
+        {
+            if (completed || running)
+            {
+                updateBuild();
+            }
+            else
+            {
+                if (!stopRequested) getBuild();
+            }
         }
 
         public static void stop()
         {
+            _poller.Stop();
             stopRequested = true;
             while (running)
             {
@@ -55,28 +74,6 @@ namespace gitlab_ci_runner.runner
             get
             {
                 return build != null;
-            }
-        }
-
-        /// <summary>
-        /// Wait for an incoming build or update current Build
-        /// </summary>
-        private static void waitForBuild()
-        {
-            while (!stopRequested || running)
-            {
-                if (completed || running)
-                {
-                    // Build is running or completed
-                    // Update build
-                    updateBuild();
-                }
-                else
-                {
-                    // Get new build
-                    if(!stopRequested) getBuild();
-                }
-                Thread.Sleep(5000);
             }
         }
 
@@ -115,15 +112,14 @@ namespace gitlab_ci_runner.runner
         /// </summary>
         private static void getBuild()
         {
-            BuildInfo binfo = Network.getBuild();
-            if (binfo != null)
-            {
-                // Create Build Job
-                build = new Build(binfo);
-                Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + binfo.id + " started...");
-                Thread t = new Thread(build.run);
-                t.Start();
-            }
+            var binfo = Network.getBuild();
+            if (binfo == null) return;
+
+            // Create Build Job
+            build = new Build(binfo);
+            Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + binfo.id + " started...");
+            var t = new Task(build.run);
+            t.Start();
         }
     }
 }

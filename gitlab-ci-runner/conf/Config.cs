@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -14,7 +15,9 @@ namespace gitlab_ci_runner.conf
         /// <summary>
         /// URL to the Gitlab CI coordinator
         /// </summary>
-        public static string url;
+        public static string url {
+            get { return ConfigurationManager.AppSettings["gitlab-ci-url"]; }
+        }
 
         /// <summary>
         /// Gitlab CI runner auth token
@@ -24,7 +27,7 @@ namespace gitlab_ci_runner.conf
         /// <summary>
         /// Configuration Path
         /// </summary>
-        private static string confPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + @"\runner.cfg";
+        private const string confPath = @"token.cfg";
 
         /// <summary>
         /// Load the configuration
@@ -33,9 +36,7 @@ namespace gitlab_ci_runner.conf
         {
             if (File.Exists(confPath))
             {
-                IniFile ini = new IniFile(confPath);
-                url = ini.IniReadValue("main", "url");
-                token = ini.IniReadValue("main", "token");
+                token = File.ReadAllText(confPath);
             }
         }
 
@@ -49,9 +50,7 @@ namespace gitlab_ci_runner.conf
                 File.Delete(confPath);
             }
 
-            IniFile ini = new IniFile(confPath);
-            ini.IniWriteValue("main", "url", url);
-            ini.IniWriteValue("main", "token", token);
+            File.WriteAllText(confPath, token);
         }
 
         /// <summary>

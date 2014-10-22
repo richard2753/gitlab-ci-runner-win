@@ -35,30 +35,30 @@ namespace gitlab_ci_runner.helper
         /// <returns>Token</returns>
         public static string registerRunner(String sPubKey, String sToken)
         {
-			var client = new JsonServiceClient (apiurl);
-			try
-			{
-				var authToken = client.Post (new RegisterRunner
-				{
-					token = Uri.EscapeDataString (sToken),
-					public_key = Uri.EscapeDataString (sPubKey)
-				});
+            var client = new JsonServiceClient(apiurl);
+            try
+            {
+                var authToken = client.Post(new RegisterRunner
+                {
+                    token = Uri.EscapeDataString(sToken),
+                    public_key = Uri.EscapeDataString(sPubKey)
+                });
 
-				if (!authToken.token.IsNullOrEmpty ())
-				{
-						Console.WriteLine ("Runner registered with id {0}", authToken.id);
-						return authToken.token;
-				}
-				else
-				{
-					return null;
-				}
-			}
-			catch(WebException ex)
-			{
-				Console.WriteLine ("Error while registering runner :", ex.Message);
-				return null;
-			}          
+                if (!authToken.token.IsNullOrEmpty())
+                {
+                    Console.WriteLine("Runner registered with id {0}", authToken.id);
+                    return authToken.token;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (WebException ex)
+            {
+                Console.WriteLine("Error while registering runner :", ex.Message);
+                return null;
+            }
         }
 
         /// <summary>
@@ -68,30 +68,30 @@ namespace gitlab_ci_runner.helper
         public static BuildInfo getBuild()
         {
             Console.WriteLine("* Checking for builds...");
-			var client = new JsonServiceClient (apiurl);
-			try
-			{
-				var buildInfo = client.Post (new CheckForBuild
-				{
-					token = Uri.EscapeDataString (Config.token)
-				});
+            var client = new JsonServiceClient(apiurl);
+            try
+            {
+                var buildInfo = client.Post(new CheckForBuild
+                {
+                    token = Uri.EscapeDataString(Config.token)
+                });
 
-				if (buildInfo != null)
-				{
-					return buildInfo;                  
-				}			
-			}
-			catch (WebServiceException ex)
-			{
-				if(ex.StatusCode == 404)
-				{
-					Console.WriteLine ("* Nothing");
-				}
-				else
-				{
-					Console.WriteLine ("* Failed");
-				}
-			}
+                if (buildInfo != null)
+                {
+                    return buildInfo;
+                }
+            }
+            catch (WebServiceException ex)
+            {
+                if (ex.StatusCode == 404)
+                {
+                    Console.WriteLine("* Nothing");
+                }
+                else
+                {
+                    Console.WriteLine("* Failed");
+                }
+            }
 
             return null;
         }
@@ -106,7 +106,7 @@ namespace gitlab_ci_runner.helper
         public static bool pushBuild(int iId, State state, string sTrace)
         {
             Console.WriteLine("[" + DateTime.Now + "] Submitting build " + iId + " to coordinator ...");
-        
+
             var stateValue = "";
             if (state == State.RUNNING)
             {
@@ -124,7 +124,7 @@ namespace gitlab_ci_runner.helper
             {
                 stateValue = "waiting";
             }
-            
+
             var trace = new StringBuilder();
             foreach (string t in sTrace.Split('\n'))
                 trace.Append(t).Append("\n");
@@ -134,20 +134,24 @@ namespace gitlab_ci_runner.helper
             {
                 try
                 {
-					var client = new JsonServiceClient(apiurl);
-					var resp = client.Put (new PushBuild { 
-						id = iId + ".json",
-						token = Uri.EscapeDataString(Config.token),
-						state = stateValue,
-						trace = trace.ToString () });
+                    var client = new JsonServiceClient(apiurl);
+                    var resp = client.Put(new PushBuild
+                    {
+                        id = iId + ".json",
+                        token = Uri.EscapeDataString(Config.token),
+                        state = stateValue,
+                        trace = trace.ToString()
+                    });
 
                     if (resp != null)
                     {
                         return true;
                     }
                 }
-                catch
-                { }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("ERROR: " + ex.ToString());
+                }
 
                 iTry++;
                 Thread.Sleep(1000);

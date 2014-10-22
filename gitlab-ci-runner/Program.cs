@@ -1,12 +1,6 @@
-﻿using System;
+﻿using System.Configuration;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.IO;
-using System.Reflection;
-using gitlab_ci_runner.conf;
-using gitlab_ci_runner.runner;
-using gitlab_ci_runner.setup;
 using Topshelf;
 
 namespace gitlab_ci_runner
@@ -15,66 +9,26 @@ namespace gitlab_ci_runner
     {
         static void Main(string[] args)
         {
-            if (args.Contains("-sslbypass"))
+            //Console.InputEncoding = Encoding.Default;
+            //Console.OutputEncoding = Encoding.Default;
+            if (args.Contains(ConfigurationManager.AppSettings["gitlab-ci-sslbypass"]))
             {
                 RegisterSecureSocketsLayerBypass();
             }
             HostFactory.Run(host =>
             {
+                host.SetInstanceName(ConfigurationManager.AppSettings["service-instance-name"]);
                 host.SetDisplayName("GitLab CI Windows Runner");
-                host.RunAsLocalSystem();
+                host.SetDescription("GitLab CI Windows Runner");
+                host.RunAs(ConfigurationManager.AppSettings["service-username"], ConfigurationManager.AppSettings["service-password"]);
                 host.Service<RunnerService>();
             });
         }
 
-		static void RegisterSecureSocketsLayerBypass()
-		{
-			ServicePointManager.ServerCertificateValidationCallback +=
-			    (sender, certificate, chain, sslPolicyErrors) => true;
-		}
-    }
-
-    public class RunnerService : ServiceControl
-    {
-        public bool Start(HostControl hostControl)
+        static void RegisterSecureSocketsLayerBypass()
         {
-            Console.InputEncoding = Encoding.Default;
-            Console.OutputEncoding = Encoding.Default;
-            ServicePointManager.DefaultConnectionLimit = 999;
-
-            if (Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location).Substring(0, 1) == @"\")
-            {
-                Console.WriteLine("Can't run on UNC Path");
-            }
-            else
-            {
-                Console.WriteLine("Starting Gitlab CI Runner for Windows");
-                Config.loadConfig();
-
-                if (!Config.isConfigured())
-                {
-                    // Load the setup
-                    Setup.run();
-                }
-
-                if (Config.isConfigured())
-                {
-                    // Load the runner
-                    Runner.run();
-                }
-            }
-            Console.WriteLine();
-            Console.WriteLine("Runner quit. Press any key to exit!");
-            //Console.ReadKey();
-            return true;
-        }
-
-        public bool Stop(HostControl hostControl)
-        {
-            Runner.stop();
-            return true;
+            ServicePointManager.ServerCertificateValidationCallback +=
+                (sender, certificate, chain, sslPolicyErrors) => true;
         }
     }
-
-
 }

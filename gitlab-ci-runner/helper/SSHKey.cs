@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -36,7 +37,7 @@ namespace gitlab_ci_runner.helper
             p.WaitForExit();
             while (!File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub") &&
                    !File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa"))
-            {
+            { 
                 Thread.Sleep(1000);
             }
             Console.WriteLine("SSH Key generated successfully!");

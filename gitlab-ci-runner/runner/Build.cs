@@ -95,18 +95,19 @@ namespace gitlab_ci_runner.runner
         public void run()
         {
             state = State.RUNNING;
-            
-            try {
+
+            try
+            {
 
                 // Initialize project dir
                 initProjectDir();
-    
+
                 // Add build commands
-                foreach (string sCommand in buildInfo.GetCommands ())
+                foreach (string sCommand in buildInfo.GetCommands())
                 {
                     commands.AddLast(sCommand);
                 }
-    
+
                 // Execute
                 foreach (string sCommand in commands)
                 {
@@ -116,20 +117,22 @@ namespace gitlab_ci_runner.runner
                         break;
                     }
                 }
-    
+
                 if (state == State.RUNNING)
                 {
                     state = State.SUCCESS;
                 }
-                
-            } catch (Exception rex) {
+
+            }
+            catch (Exception rex)
+            {
                 outputList.Enqueue("");
                 outputList.Enqueue("A runner exception occoured: " + rex.Message);
                 outputList.Enqueue("");
                 state = State.FAILED;
             }
-            
-            
+
+
             completed = true;
         }
 
@@ -144,7 +147,7 @@ namespace gitlab_ci_runner.runner
                 // Create projects directory
                 Directory.CreateDirectory(sProjectsDir);
             }
-
+            commands.AddLast("path");
             // Check if already a git repo
             if (Directory.Exists(sProjectDir + @"\.git") && buildInfo.allow_git_fetch)
             {
@@ -180,7 +183,7 @@ namespace gitlab_ci_runner.runner
                 outputList.Enqueue("");
 
                 // Build process
-                Process p = new Process();
+                var p = new Process();
                 p.StartInfo.UseShellExecute = false;
                 if (Directory.Exists(sProjectDir))
                 {
@@ -208,8 +211,8 @@ namespace gitlab_ci_runner.runner
                 // Redirect Standard Output and Standard Error
                 p.StartInfo.RedirectStandardOutput = true;
                 p.StartInfo.RedirectStandardError = true;
-                p.OutputDataReceived += new DataReceivedEventHandler(outputHandler);
-                p.ErrorDataReceived += new DataReceivedEventHandler(outputHandler);
+                p.OutputDataReceived += outputHandler;
+                p.ErrorDataReceived += outputHandler;
 
                 try
                 {
@@ -226,8 +229,8 @@ namespace gitlab_ci_runner.runner
                 }
                 finally
                 {
-                    p.OutputDataReceived -= new DataReceivedEventHandler(outputHandler);
-                    p.ErrorDataReceived -= new DataReceivedEventHandler(outputHandler);
+                    p.OutputDataReceived -= outputHandler;
+                    p.ErrorDataReceived -= outputHandler;
                 }
             }
             catch (Exception)
