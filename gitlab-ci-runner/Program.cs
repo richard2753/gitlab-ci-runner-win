@@ -9,8 +9,6 @@ namespace gitlab_ci_runner
     {
         static void Main(string[] args)
         {
-            //Console.InputEncoding = Encoding.Default;
-            //Console.OutputEncoding = Encoding.Default;
             if (args.Contains(ConfigurationManager.AppSettings["gitlab-ci-sslbypass"]))
             {
                 RegisterSecureSocketsLayerBypass();

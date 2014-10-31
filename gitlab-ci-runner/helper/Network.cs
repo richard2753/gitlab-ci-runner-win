@@ -1,16 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
-using System.Web;
 using gitlab_ci_runner.api;
 using gitlab_ci_runner.conf;
 using gitlab_ci_runner.runner;
 using ServiceStack;
-using ServiceStack.Text;
 
 namespace gitlab_ci_runner.helper
 {
@@ -19,11 +14,11 @@ namespace gitlab_ci_runner.helper
         /// <summary>
         /// Gitlab CI API URL
         /// </summary>
-        private static string apiurl
+        private static string ApiUrl
         {
             get
             {
-                return Config.url + "/api/v1/";
+                return Config.Url + "/api/v1/";
             }
         }
 
@@ -33,9 +28,9 @@ namespace gitlab_ci_runner.helper
         /// <param name="sPubKey">SSH Public Key</param>
         /// <param name="sToken">Token</param>
         /// <returns>Token</returns>
-        public static string registerRunner(String sPubKey, String sToken)
+        public static string RegisterRunner(string sPubKey, string sToken)
         {
-            var client = new JsonServiceClient(apiurl);
+            var client = new JsonServiceClient(ApiUrl);
             try
             {
                 var authToken = client.Post(new RegisterRunner
@@ -65,15 +60,15 @@ namespace gitlab_ci_runner.helper
         /// Get a new build
         /// </summary>
         /// <returns>BuildInfo object or null on error/no build</returns>
-        public static BuildInfo getBuild()
+        public static BuildInfo GetBuild()
         {
             Console.WriteLine("* Checking for builds...");
-            var client = new JsonServiceClient(apiurl);
+            var client = new JsonServiceClient(ApiUrl);
             try
             {
                 var buildInfo = client.Post(new CheckForBuild
                 {
-                    token = Uri.EscapeDataString(Config.token)
+                    token = Uri.EscapeDataString(Config.Token)
                 });
 
                 if (buildInfo != null)
@@ -83,14 +78,7 @@ namespace gitlab_ci_runner.helper
             }
             catch (WebServiceException ex)
             {
-                if (ex.StatusCode == 404)
-                {
-                    Console.WriteLine("* Nothing");
-                }
-                else
-                {
-                    Console.WriteLine("* Failed");
-                }
+                Console.WriteLine(ex.StatusCode == 404 ? "* Nothing" : "* Failed");
             }
 
             return null;
@@ -103,27 +91,9 @@ namespace gitlab_ci_runner.helper
         /// <param name="state">State</param>
         /// <param name="sTrace">Command output</param>
         /// <returns></returns>
-        public static bool pushBuild(int iId, State state, string sTrace)
+        public static bool PushBuild(int iId, State state, string sTrace)
         {
             Console.WriteLine("[" + DateTime.Now + "] Submitting build " + iId + " to coordinator ...");
-
-            var stateValue = "";
-            if (state == State.RUNNING)
-            {
-                stateValue = "running";
-            }
-            else if (state == State.SUCCESS)
-            {
-                stateValue = "success";
-            }
-            else if (state == State.FAILED)
-            {
-                stateValue = "failed";
-            }
-            else
-            {
-                stateValue = "waiting";
-            }
 
             var trace = new StringBuilder();
             foreach (string t in sTrace.Split('\n'))
@@ -134,12 +104,12 @@ namespace gitlab_ci_runner.helper
             {
                 try
                 {
-                    var client = new JsonServiceClient(apiurl);
+                    var client = new JsonServiceClient(ApiUrl);
                     var resp = client.Put(new PushBuild
                     {
                         id = iId + ".json",
-                        token = Uri.EscapeDataString(Config.token),
-                        state = stateValue,
+                        token = Uri.EscapeDataString(Config.Token),
+                        state = GetStateString(state),
                         trace = trace.ToString()
                     });
 
@@ -158,6 +128,11 @@ namespace gitlab_ci_runner.helper
             }
 
             return false;
+        }
+
+        private static string GetStateString(State state)
+        {
+            return state.ToString().ToLowerInvariant();
         }
     }
 }

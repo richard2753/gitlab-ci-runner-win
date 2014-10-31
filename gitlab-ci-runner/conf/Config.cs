@@ -1,12 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
+﻿using System.Configuration;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using gitlab_ci_runner.helper;
 
 namespace gitlab_ci_runner.conf
 {
@@ -15,51 +8,51 @@ namespace gitlab_ci_runner.conf
         /// <summary>
         /// URL to the Gitlab CI coordinator
         /// </summary>
-        public static string url {
+        public static string Url {
             get { return ConfigurationManager.AppSettings["gitlab-ci-url"]; }
         }
 
         /// <summary>
         /// Gitlab CI runner auth token
         /// </summary>
-        public static string token;
+        public static string Token;
 
         /// <summary>
         /// Configuration Path
         /// </summary>
-        private const string confPath = @"token.cfg";
+        private const string ConfPath = @"token.cfg";
 
         /// <summary>
         /// Load the configuration
         /// </summary>
-        public static void loadConfig()
+        public static void LoadConfig()
         {
-            if (File.Exists(confPath))
+            if (File.Exists(ConfPath))
             {
-                token = File.ReadAllText(confPath);
+                Token = File.ReadAllText(ConfPath);
             }
         }
 
         /// <summary>
         /// Save the configuration
         /// </summary>
-        public static void saveConfig()
+        public static void SaveConfig()
         {
-            if (File.Exists(confPath))
+            if (File.Exists(ConfPath))
             {
-                File.Delete(confPath);
+                File.Delete(ConfPath);
             }
 
-            File.WriteAllText(confPath, token);
+            File.WriteAllText(ConfPath, Token);
         }
 
         /// <summary>
         /// Is the runner already configured?
         /// </summary>
         /// <returns>true if configured, false if not</returns>
-        public static bool isConfigured()
+        public static bool IsConfigured()
         {
-            if (url != null && url != "" && token != null && token != "")
+            if (!string.IsNullOrEmpty(Url) && !string.IsNullOrEmpty(Token))
             {
                 return true;
             }

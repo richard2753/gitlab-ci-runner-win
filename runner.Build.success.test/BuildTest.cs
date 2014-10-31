@@ -72,20 +72,21 @@ namespace runner.Build.success.test
         public void runTest()
         {
             // copied from official gitlab ci runner spec
-            BuildInfo buildInfo = new BuildInfo();
-            buildInfo.commands = "dir";
-            buildInfo.allow_git_fetch = false;
-            buildInfo.project_id = 0;
-            buildInfo.id = 9312;
-            buildInfo.repo_url = "https://github.com/randx/six.git";
-            buildInfo.sha = "2e008a711430a16092cd6a20c225807cb3f51db7";
-            buildInfo.timeout = 1800;
-            buildInfo.ref_name = "master";
+            var buildInfo = new BuildInfo
+            {
+                commands = "dir",
+                allow_git_fetch = false,
+                project_id = 0,
+                id = 9312,
+                repo_url = "https://github.com/randx/six.git",
+                sha = "2e008a711430a16092cd6a20c225807cb3f51db7",
+                timeout = 1800,
+                ref_name = "master"
+            };
 
-            gitlab_ci_runner.runner.Build target = new gitlab_ci_runner.runner.Build(buildInfo);
-            target.run();
-            Console.WriteLine(target.output);
-            Assert.AreEqual(target.state, State.SUCCESS);
+            var target = new gitlab_ci_runner.runner.Build(buildInfo);
+            target.Run();
+            Assert.AreEqual(target.State, State.Success);
         }
     }
 }

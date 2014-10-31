@@ -1,18 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using ServiceStack;
+﻿using ServiceStack;
 
-
-/// <summary>
-/// V1 API
-/// </summary>
 namespace gitlab_ci_runner.api
 {
 	[Route ("/runners/register.json","POST")]
 	public class RegisterRunner : IReturn<RunnerInfo>
 	{
+        [ServiceStack.ApiMember()]
 		public string token
 		{
 			get;

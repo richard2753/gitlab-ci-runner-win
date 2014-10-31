@@ -7,38 +7,20 @@ namespace gitlab_ci_runner.setup
 {
     class Setup
     {
-        /// <summary>
-        /// Start the Setup
-        /// </summary>
-        public static void run()
+        public static void Run()
         {
-            // Generate SSH Keys
-            SSHKey.generateKeypair();
+            SshKey.GenerateKeypair();
 
-            // Register Runner
-            registerRunner();
+            RegisterRunner();
         }
 
-        /// <summary>
-        /// Register the runner with the coordinator
-        /// </summary>
-        private static void registerRunner()
+        private static void RegisterRunner()
         {
-            // Read Token
-            //string sToken = "";
-            //while (sToken == "")
-            //{
-            //    Console.WriteLine("Please enter the gitlab-ci token for this runner:");
-            //    sToken = Console.ReadLine();
-            //}
-
-            // Register Runner
-            string sTok = Network.registerRunner(SSHKey.getPublicKey(), ConfigurationManager.AppSettings["gitlab-ci-token"]);
-            if (sTok != null)
+            string token = Network.RegisterRunner(SshKey.GetPublicKey(), ConfigurationManager.AppSettings["gitlab-ci-token"]);
+            if (token != null)
             {
-                // Save Config
-                Config.token = sTok;
-                Config.saveConfig();
+                Config.Token = token;
+                Config.SaveConfig();
 
                 Console.WriteLine();
                 Console.WriteLine("Runner registered successfully. Feel free to start it!");

@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using gitlab_ci_runner.api;
 using gitlab_ci_runner.helper;
 using Magnum.Extensions;
 using Timer = System.Timers.Timer;
@@ -13,112 +9,92 @@ namespace gitlab_ci_runner.runner
 {
     class Runner
     {
-        /// <summary>
-        /// Build process
-        /// </summary>
-        private static Build build = null;
-        private static bool stopRequested = false;
-        private static readonly Timer _poller = new Timer(5.Seconds().TotalMilliseconds);
+        private static Build _build = null;
+        private static bool _stopRequested = false;
+        private static bool _polling = false;
+        private static readonly Timer Poller = new Timer(5.Seconds().TotalMilliseconds);
 
-        /// <summary>
-        /// Start the configured runner
-        /// </summary>
-        public static void run()
+        public static void Run()
         {
-            stopRequested = false;
-            _poller.Elapsed += (o, e) => PollForBuild();
-            _poller.Start();
+            _stopRequested = false;
+            Poller.Elapsed += (o, e) => PollForBuild();
+            Poller.Start();
             Console.WriteLine("* Gitlab CI Runner started");
             Console.WriteLine("* Waiting for builds");
-            //waitForBuild();
         }
 
         private static void PollForBuild()
         {
-            if (completed || running)
+            if (_polling)
+                return;
+            _polling = true;
+            try
             {
-                updateBuild();
+                if (Running)
+                {
+                    UpdateBuild();
+                }
+                else
+                {
+                    if (!_stopRequested) GetBuild();
+                }
             }
-            else
+            finally
             {
-                if (!stopRequested) getBuild();
+                _polling = false;
             }
         }
 
-        public static void stop()
+        public static void Stop()
         {
-            _poller.Stop();
-            stopRequested = true;
-            while (running)
+            Poller.Stop();
+            _stopRequested = true;
+            while (Running)
             {
                 Thread.Sleep(1000);
             }
         }
 
-        /// <summary>
-        /// Build completed?
-        /// </summary>
-        public static bool completed
+        public static bool Completed
         {
             get
             {
-                return running && build.completed;
+                return Running && _build.Completed;
             }
         }
 
-        /// <summary>
-        /// Build running?
-        /// </summary>
-        public static bool running
+        public static bool Running
         {
             get
             {
-                return build != null;
+                return _build != null;
             }
         }
 
-        /// <summary>
-        /// Update the current running build progress
-        /// </summary>
-        private static void updateBuild()
+        private static void UpdateBuild()
         {
-            if (build.completed)
+            if (Completed)
             {
-                // Build finished
-                if (pushBuild())
+                if (_build.PushProgress())
                 {
-                    Console.WriteLine("[" + DateTime.Now.ToString() + "] Completed build " + build.buildInfo.id);
-                    build = null;
+                    Console.WriteLine("[" + DateTime.Now + "] Completed build " + _build.Id);
+                    _build = null;
                 }
             }
             else
             {
-                // Build is currently running
-                pushBuild();
+                _build.PushProgress();
             }
         }
 
-        /// <summary>
-        /// PUSH Build Status to Gitlab CI
-        /// </summary>
-        /// <returns>true on success, false on fail</returns>
-        private static bool pushBuild()
+        private static void GetBuild()
         {
-            return Network.pushBuild(build.buildInfo.id, build.state, build.output);
-        }
-
-        /// <summary>
-        /// Get a new build job
-        /// </summary>
-        private static void getBuild()
-        {
-            var binfo = Network.getBuild();
+            var binfo = Network.GetBuild();
             if (binfo == null) return;
 
-            // Create Build Job
-            build = new Build(binfo);
-            Console.WriteLine("[" + DateTime.Now.ToString() + "] Build " + binfo.id + " started...");
-            var t = new Task(build.run);
+            _build = new Build(binfo);
+            Console.WriteLine("[" + DateTime.Now + "] Build " + _build.Id + " started...");
+            var t = new Task(_build.Run);
             t.Start();
         }
     }

@@ -9,12 +9,12 @@ using System.Threading;
 
 namespace gitlab_ci_runner.helper
 {
-    class SSHKey
+    class SshKey
     {
         /// <summary>
         /// Generate a keypair
         /// </summary>
-        public static void generateKeypair()
+        public static void GenerateKeypair()
         {
             // We need both, the Public and Private Key
             // Public Key to send to Gitlab
@@ -47,11 +47,11 @@ namespace gitlab_ci_runner.helper
         /// Get the public key
         /// </summary>
         /// <returns></returns>
-        public static string getPublicKey()
+        public static string GetPublicKey()
         {
             if (File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub"))
             {
-                return TextFile.ReadFile(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub");
+                return File.ReadAllText(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile) + @"\.ssh\id_rsa.pub");
             }
             else
             {

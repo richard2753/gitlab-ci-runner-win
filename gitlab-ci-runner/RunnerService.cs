@@ -23,20 +23,20 @@ namespace gitlab_ci_runner
             else
             {
                 Console.WriteLine("Starting Gitlab CI Runner for Windows");
-                Config.loadConfig();
+                Config.LoadConfig();
 
-                if (!Config.isConfigured())
+                if (!Config.IsConfigured())
                 {
-                    Setup.run();
+                    Setup.Run();
                 }
-                new Task(Runner.run).Start();
+                Runner.Run();
             }
             return true;
         }
 
         public bool Stop(HostControl hostControl)
         {
-            Runner.stop();
+            Runner.Stop();
             return true;
         }
     }
